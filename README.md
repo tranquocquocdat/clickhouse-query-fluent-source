@@ -2,7 +2,7 @@
 
 # ClickHouse Query Builder
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://openjdk.org/)
 [![Spring](https://img.shields.io/badge/Spring_JDBC-6.x-brightgreen.svg)](https://spring.io/)
 
