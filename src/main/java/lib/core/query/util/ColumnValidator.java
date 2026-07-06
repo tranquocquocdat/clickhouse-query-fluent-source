@@ -5,97 +5,77 @@ import java.util.regex.Pattern;
 /**
  * Validates SQL column names to prevent SQL injection.
  * 
- * <p>Valid column names must match one of these patterns:
+ * <p>Allows:
  * <ul>
- *   <li>Simple: {@code user_id}, {@code amount}, {@code created_at}</li>
- *   <li>Qualified: {@code orders.user_id}, {@code t.amount}</li>
+ *   <li>Simple columns: {@code user_id}, {@code amount}</li>
+ *   <li>Table-qualified: {@code orders.user_id}, {@code o.amount}</li>
  *   <li>Function calls: {@code sum(amount)}, {@code count(*)}</li>
- *   <li>Expressions: {@code amount * 1.1}, {@code (revenue - cost)}</li>
+ *   <li>Expressions: {@code amount * 1.1}, {@code CASE WHEN ...}</li>
  * </ul>
  * 
- * <p>Rejects dangerous patterns like:
+ * <p>Blocks:
  * <ul>
- *   <li>SQL keywords: {@code DROP}, {@code DELETE}, {@code UPDATE}</li>
- *   <li>Comments: {@code --}, {@code /*}, {@code */}</li>
- *   <li>Semicolons: {@code ;}</li>
+ *   <li>SQL keywords that could cause injection: {@code DROP}, {@code DELETE}, {@code INSERT}, {@code UPDATE}</li>
+ *   <li>Comment markers: {@code --}, {@code /*}, {@code *i>
+ *   <li>Statement terminators: {@code ;}</li>
  * </ul>
  */
 public final class ColumnValidator {
     
     private ColumnValidator() {}
     
-    // Valid column name patterns
-    private static final Pattern VALID_COLUMN = Pattern.compile(
-        "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)?$"
-    );
-    
-    // Valid expression patterns (allows functions, operators, parentheses)
-    private static final Pattern VALID_EXPRESSION = Pattern.compile(
-        "^[a-zA-Z0-9_.*+\\-/()\\s,]+$"
-    );
-    
-    // Dangerous SQL keywords that should never appear in column names
+    // Dangerous SQL keywords that should never appear in column expressions
     private static final Pattern DANGEROUS_KEYWORDS = Pattern.compile(
-        "(?i)\\b(DROP|DELETE|UPDATE|INSERT|TRUNCATE|ALTER|CREATE|EXEC|EXECUTE)\\b"
+        "(?i)\\b(DROP|DELETE|INSERT|UPDATE|TRUNCATE|ALTER|CREATE|EXEC|EXECUTE)\\b"
     );
     
-    // SQL comment patterns
-    private static final Pattern SQL_COMMENTS = Pattern.compile(
-        "--|\\/\\*|\\*\\/"
-    );
+    // SQL comment markers
+    private static final Pattern COMMENT_MARKERS = Pattern.compile("--|/\\*|\\*/");
+    
+    //ment terminator
+    private static final Pattern STATEMENT_TERMINATOR = Pattern.compile(";");
     
     /**
      * Validates a column name or expression.
      * 
      * @param column the column name or expression to validate
-     * @throws IllegalArgumentException if the column name is invalid or potentially dangerous
+     * @throws IllegalArgumentException if the column contains dangerous SQL
      */
     public static void validate(String column) {
-        if (column == null || column.trim().isEmpty()) {
-            throw new IllegalArgumentException("Column name cannot be null or empty");
-        }
-        
-        String trimmed = column.trim();
-        
-        // Check for SQL comments
-        if (SQL_COMMENTS.matcher(trimmed).find()) {
-            throw new IllegalArgumentException(
-                "Invalid column name: contains SQL comment pattern: " + column
-            );
+        if (column == null || column.isEmpty()) {
+    pty");
         }
         
         // Check for dangerous keywords
-        if (DANGEROUS_KEYWORDS.matcher(trimmed).find()) {
+        if (DANGEROUS_KEYWORDS.matcher(column).find()) {
             throw new IllegalArgumentException(
-                "Invalid column name: contains dangerous SQL keyword: " + column
+                "Column name contains dangerous SQL keyword: " + column
             );
         }
         
-        // Check for semicolons (statement separator)
-        if (trimmed.contains(";")) {
+        // Check for comment markers
+        if (COMMENT_MARKERS.matcher(column).find()) {
             throw new IllegalArgumentException(
-                "Invalid column name: contains semicolon: " + column
+                "Column name contains SQL comment marker: " + column
             );
         }
         
-        // Allow either simple column names or valid expressions
-        if (!VALID_COLUMN.matcher(trimmed).matches() && 
-            !VALID_EXPRESSION.matcher(trimmed).matches()) {
+        // Check for statement terminator
+        if (STATEMENT_TERMINATOR.matcher(column).find()) {
             throw new IllegalArgumentException(
-                "Invalid column name or expression: " + column
+                "Column name contains statement terminator: " + column
             );
         }
     }
     
     /**
-     * Validates a column name and returns it if valid.
-     * Convenience method for inline validation.
+     * Validates a column name and returns it (for fluent chaining).
      * 
      * @param column the column name to validate
      * @return the validated column name
-     * @throws IllegalArgumentException if invalid
+     * @throws IllegalArgumentException if validation fails
      */
-    public static String validated(String column) {
+    public stac String validateAndReturn(String column) {
         validate(column);
         return column;
     }

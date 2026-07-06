@@ -20,7 +20,13 @@ Thumbs.db
 *.tmp
 
 # Planning & Analysis Documents
-docs/planning/
+docs/
 
 # Kiro Specs
 .kiro/
+
+# Compiled and Generated
+bin/
+build_output.txt
+*.class
+target/
